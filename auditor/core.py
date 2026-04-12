@@ -68,7 +68,23 @@ class SovereignAuditor:
         if not (septip_dir / "Master_Protocol.md").exists():
             return ["SEPTIP_VIOLATION: Master_Protocol.md is missing from doctrine/SEPTIP/."]
             
-        return []
+        # Verify Docker Law Branch compliance
+        errors = self._scan_for_docker_violations(root_dir)
+        return errors
+
+    def _scan_for_docker_violations(self, root_dir):
+        """Mandatory SEPTIP check: All Docker contexts MUST have .dockerignore."""
+        violations = []
+        root_path = Path(root_dir)
+        
+        # Scans for any Dockerfile in the root or splinters
+        # If any Dockerfile exists, there MUST be a .dockerignore in the same dir
+        for dockerfile in root_path.rglob("Dockerfile"):
+            context_dir = dockerfile.parent
+            if not (context_dir / ".dockerignore").exists():
+                violations.append(f"SEPTIP_VIOLATION [DOCKER_CLI]: Missing .dockerignore in {context_dir.relative_to(root_path)}")
+        
+        return violations
 
     def audit(self, file_path, root_dir=None):
         """Executes the full Sovereign Audit on the target file."""
