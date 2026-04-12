@@ -58,7 +58,19 @@ class SovereignAuditor:
                 findings.append(f"TRUNCATION_VIOLATION: Truncation marker '{marker}' detected in Section II.")
         return findings
 
-    def audit(self, file_path):
+    def _check_septip_compliance(self, root_dir):
+        """Verifies modular SEPTIP law branches exist for used tools."""
+        septip_dir = Path(root_dir) / "doctrine" / "SEPTIP"
+        if not septip_dir.exists():
+            return ["SEPTIP_VIOLATION: Mission-critical 'doctrine/SEPTIP/' directory is missing."]
+        
+        # Verify Master Protocol presence
+        if not (septip_dir / "Master_Protocol.md").exists():
+            return ["SEPTIP_VIOLATION: Master_Protocol.md is missing from doctrine/SEPTIP/."]
+            
+        return []
+
+    def audit(self, file_path, root_dir=None):
         """Executes the full Sovereign Audit on the target file."""
         target = Path(file_path)
         if not target.exists():
@@ -83,6 +95,11 @@ class SovereignAuditor:
         truncation_faults = self._check_truncation(content)
         errors.extend(truncation_faults)
 
+        # 4. SEPTIP Compliance (if root_dir provided)
+        if root_dir:
+            septip_faults = self._check_septip_compliance(root_dir)
+            errors.extend(septip_faults)
+
         if errors:
             print(f"!!! [SOVEREIGN_AUDIT_REJECTION] - {target.name} FAILED !!!")
             for e in errors:
@@ -94,10 +111,13 @@ class SovereignAuditor:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python core.py <target_file>")
+        print("Usage: python core.py <target_file> [root_dir]")
         sys.exit(1)
         
+    target_file = sys.argv[1]
+    root_dir = sys.argv[2] if len(sys.argv) > 2 else None
+    
     auditor = SovereignAuditor()
-    if not auditor.audit(sys.argv[1]):
+    if not auditor.audit(target_file, root_dir=root_dir):
         sys.exit(403) # Sovereign Rejection
     sys.exit(0)
