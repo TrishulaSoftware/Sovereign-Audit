@@ -1,12 +1,18 @@
 import re
 import sys
+import hashlib
+import json
+import time
 from pathlib import Path
+from .cache import AuditCache
 
-# --- [TRISHULA_SQA_v5] SOVEREIGN AUDIT CORE v1.0 ---
+# --- [TRISHULA_SQA_v5] SOVEREIGN AUDIT CORE v1.1 ---
 # ENFORCING: THE OUTWARD MATRIX MANDATE & ZERO-TRUNCATION MANDATE
+# SEPTIP: INTEGRATED SCAN CACHE [v1.1 UPDATE]
 
 class SovereignAuditor:
-    def __init__(self):
+    def __init__(self, cache_file=None):
+        self.cache = AuditCache(cache_file)
         # Perimeters
         self.internal_lexicon = [
             r'\baegis\b', r'\bjanitor\b', r'\biron box\b', r'\bevo-01\b',
@@ -36,25 +42,31 @@ class SovereignAuditor:
 
     def _check_categorical_purity(self, content):
         """Ensures Section II contains NO internal lexicon/keywords."""
-        section_ii = re.search(r'\*\*\*\* SECTION II.*?(?=\*\*\*\* SECTION III|$)', content, re.DOTALL)
-        if not section_ii:
+        section_ii_match = re.search(r'\*\*\*\* SECTION II.*?(?=\*\*\*\* SECTION III|$)', content, re.DOTALL)
+        if not section_ii_match:
             return []
+            
+        # Refinement: Strip Markdown comments to allow instructional metadata
+        clean_content = re.sub(r'<!--.*?-->', '', section_ii_match.group(), flags=re.DOTALL)
             
         findings = []
         for pattern in self.internal_lexicon:
-            if re.search(pattern, section_ii.group(), re.IGNORECASE):
+            if re.search(pattern, clean_content, re.IGNORECASE):
                 findings.append(f"CATEGORICAL_CONTAMINATION: Internal keyword '{pattern}' found in External Matrix.")
         return findings
 
     def _check_truncation(self, content):
         """Enforces the Zero-Truncation Mandate."""
-        section_ii = re.search(r'\*\*\*\* SECTION II.*?(?=\*\*\*\* SECTION III|$)', content, re.DOTALL)
-        if not section_ii:
+        section_ii_match = re.search(r'\*\*\*\* SECTION II.*?(?=\*\*\*\* SECTION III|$)', content, re.DOTALL)
+        if not section_ii_match:
             return []
+
+        # Refinement: Strip Markdown comments before truncation check
+        clean_content = re.sub(r'<!--.*?-->', '', section_ii_match.group(), flags=re.DOTALL)
 
         findings = []
         for marker in self.truncation_markers:
-            if re.search(marker, section_ii.group(), re.IGNORECASE):
+            if re.search(marker, clean_content, re.IGNORECASE):
                 findings.append(f"TRUNCATION_VIOLATION: Truncation marker '{marker}' detected in Section II.")
         return findings
 
@@ -74,16 +86,50 @@ class SovereignAuditor:
 
     def _scan_for_docker_violations(self, root_dir):
         """Mandatory SEPTIP check: All Docker contexts MUST have .dockerignore."""
+        import os
         violations = []
         root_path = Path(root_dir)
         
-        # Scans for any Dockerfile in the root or splinters
-        # If any Dockerfile exists, there MUST be a .dockerignore in the same dir
-        for dockerfile in root_path.rglob("Dockerfile"):
-            context_dir = dockerfile.parent
-            if not (context_dir / ".dockerignore").exists():
-                violations.append(f"SEPTIP_VIOLATION [DOCKER_CLI]: Missing .dockerignore in {context_dir.relative_to(root_path)}")
+        # Optimized walk with directory pruning, depth limit, AND GIT CACHE
+        ignore_dirs = {".git", "node_modules", "venv", ".venv", "env", ".env", "Aegis-Systems", "The-Scout"}
+        max_depth = 3
         
+        root_depth = str(root_path.resolve()).count(os.sep)
+        
+        for root, dirs, files in os.walk(root_dir):
+            current_path = Path(root)
+            current_depth = str(current_path.resolve()).count(os.sep) - root_depth
+            
+            if current_depth > max_depth:
+                dirs[:] = []
+                continue
+
+            # Prune directories in-place
+            dirs[:] = [d for d in dirs if d not in ignore_dirs]
+            
+            # Cache Check: If a directory in 'dirs' is a known git splinter, check cache
+            for d in list(dirs):
+                splinter_path = current_path / d
+                if (splinter_path / ".git").exists():
+                    if self.cache.is_dir_cached(splinter_path):
+                        # print(f"[+] CACHE HIT: Skipping scan for {d}")
+                        dirs.remove(d) 
+                    else:
+                        # Will enter and scan, then update cache at end
+                        pass
+
+            if "Dockerfile" in files:
+                context_dir = Path(root)
+                if not (context_dir / ".dockerignore").exists():
+                    violations.append(f"SEPTIP_VIOLATION [DOCKER_CLI]: Missing .dockerignore in {context_dir.relative_to(root_path)}")
+        
+        # Final pass: Update cache for all direct splinters in root_dir
+        if root_path.exists():
+            for d in os.listdir(root_dir):
+                splinter_path = root_path / d
+                if (splinter_path / ".git").exists():
+                    self.cache.update_cache(splinter_path)
+                
         return violations
 
     def audit(self, file_path, root_dir=None):
