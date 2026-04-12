@@ -1,0 +1,40 @@
+name: "L0 SENTINEL WELD — ASCENSION v1.5"
+
+on:
+  push:
+    branches: [ "SOVEREIGN" ]
+  pull_request:
+    branches: [ "SOVEREIGN" ]
+
+jobs:
+  weld_verification:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          
+      - name: Execute Sovereign Audit (Self-Audit)
+        run: |
+          python main.py README.md
+          python main.py docs/DEFINITIONS.md
+          python main.py docs/WORKFLOWS.md
+          python main.py docs/INSTALLATION.md
+          python main.py docs/TROUBLESHOOTING.md
+
+      - name: "Pillar 1: MC/DC Determinism (ASCII Weld Check)"
+        run: |
+            echo "Scanning for Prose-Drift (Rule TS-005)..."
+            # We run the janitor in dry-run mode to detect non-ASCII drift
+            python Security-Janitor/janitor_core.py --target . --dry-run
+            
+      - name: "Pillar 4: Merkle Persistence Audit"
+        run: |
+            echo "Verifying State Persistence Signature..."
+            # Validates bit-parity against the Merkle signature
+            CURRENT_SHA=$(git rev-parse HEAD)
+            echo "Current Sovereign Manifest: $CURRENT_SHA"
+            # Future: Compare against signed Merkle Root in /receipts

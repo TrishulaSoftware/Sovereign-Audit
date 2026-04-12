@@ -1,0 +1,35 @@
+name: "ADVERSARIAL CRUCIBLE — NIGHTLY AUDIT"
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 2:00 AM UTC
+  workflow_dispatch:      # Manual trigger for the Vanguard
+
+jobs:
+  adversarial_audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          
+      - name: "CRUCIBLE: Prompt Injection Simulation"
+        run: |
+            echo "Injecting Stochastic Feral Signatures..."
+            # Simulates an attacker trying to bypass the Janitor cages
+            # By attempting to inject code with un-sanitized em-dashes or secrets
+            mkdir -p crucible_temp
+            echo "print('Poison—Drift')" > crucible_temp/poison.py
+            
+            # Run Janitor. Expectation: IT MUST DETECT 1 FINDING.
+            python Security-Janitor/janitor_core.py --target crucible_temp --dry-run > audit.log
+            grep "TS-005" audit.log
+            
+      - name: "Pillar 3: Logic Hole Search"
+        run: |
+            echo "Running Bandit for security linting..."
+            pip install bandit
+            bandit -r Security-Janitor/ -ll

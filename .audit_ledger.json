@@ -1,0 +1,12 @@
+{
+  "genesis": "0000000000000000000000000000000000000000000000000000000000000000",
+  "history": [
+    {
+      "timestamp": "2026-04-12T04:20:12Z",
+      "filename": "trishula_pulse_sitrep_v2_13.md",
+      "hash": "47658bc46cf0b404ac0d0b781a06151ed4d3a9e27e2254c7491e5939916d8f3a",
+      "status": "VERIFIED"
+    }
+  ],
+  "last_verified_hash": "47658bc46cf0b404ac0d0b781a06151ed4d3a9e27e2254c7491e5939916d8f3a"
+}
