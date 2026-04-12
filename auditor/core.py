@@ -4,7 +4,16 @@ import hashlib
 import json
 import time
 from pathlib import Path
-from .cache import AuditCache
+
+# Add parent to sys.path if running as standalone to handle relative imports
+if __name__ == "__main__" and __package__ is None:
+    sys.path.append(str(Path(__file__).parent.parent))
+    from auditor.cache import AuditCache
+else:
+    try:
+        from .cache import AuditCache
+    except ImportError:
+        from auditor.cache import AuditCache
 
 # --- [TRISHULA_SQA_v5] SOVEREIGN AUDIT CORE v1.1 ---
 # ENFORCING: THE OUTWARD MATRIX MANDATE & ZERO-TRUNCATION MANDATE
