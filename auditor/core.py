@@ -148,7 +148,12 @@ class SovereignAuditor:
             print(f"[-] ERROR: Target {file_path} not found.")
             return False
             
-        content = target.read_text(encoding="utf-8")
+        # Resilient Ingestion: Attempt UTF-8, fallback to Latin-1 for PowerShell BOM issues
+        try:
+            content = target.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            content = target.read_text(encoding="latin-1")
+            
         errors = []
 
         # 1. Structural Check
