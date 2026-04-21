@@ -8,6 +8,8 @@ on:
 jobs:
   adversarial_audit:
     runs-on: ubuntu-latest
+        env:
+              PYTHONPATH: ${{ github.workspace }}/Security-Janitor
     steps:
       - uses: actions/checkout@v3
 
