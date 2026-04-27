@@ -1,4 +1,7 @@
-name: "TRISHULA L0 SENTINEL"
+﻿name: "TRISHULA L0 SENTINEL"
+
+permissions:
+  contents: read
 
 on:
   push:
@@ -7,13 +10,16 @@ on:
     branches: [ "SOVEREIGN", "DOCTRINE" ]
 
 jobs:
-  logic_verification:
+  logic_verificatipermissions:
+  contents: read
+
+on:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           
@@ -38,3 +44,4 @@ jobs:
           echo "Verifying State Persistence..."
           # Validates bit-parity against the Merkle signature in the README.
           echo "State: 5788cdae8b2be47a..."
+

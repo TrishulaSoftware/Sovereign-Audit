@@ -1,4 +1,7 @@
-name: "GHOST SHIFT DEPLOY — TRISHULA EGRESS"
+﻿name: "GHOST SHIFT DEPLOY â€” TRISHULA EGRESS"
+
+permissions:
+  contents: read
 
 on:
   push:
@@ -10,7 +13,7 @@ jobs:
   package_doctrine:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: "Sanitize Egress Manifest"
         run: |
@@ -36,3 +39,4 @@ jobs:
           path: |
             trishula_sovereign_bundle.tar.gz
             manifest.sha256
+

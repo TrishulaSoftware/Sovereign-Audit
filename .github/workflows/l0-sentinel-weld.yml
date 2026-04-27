@@ -1,4 +1,7 @@
-name: "L0 SENTINEL WELD — ASCENSION v1.5"
+﻿name: "L0 SENTINEL WELD â€” ASCENSION v1.5"
+
+permissions:
+  contents: read
 
 on:
   push:
@@ -7,7 +10,10 @@ on:
     branches: [ "SOVEREIGN" ]
 
 jobs:
-  weld_verification:
+  weld_verificatipermissions:
+  contents: read
+
+on:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,3 +44,4 @@ jobs:
             CURRENT_SHA=$(git rev-parse HEAD)
             echo "Current Sovereign Manifest: $CURRENT_SHA"
             # Future: Compare against signed Merkle Root in /receipts
+
