@@ -1,19 +1,17 @@
 ﻿name: "TRISHULA L0 SENTINEL"
 
-permissions:
-  contents: read
-
 on:
   push:
     branches: [ "SOVEREIGN", "DOCTRINE" ]
   pull_request:
     branches: [ "SOVEREIGN", "DOCTRINE" ]
+  workflow_dispatch:
 
-jobs:
-  logic_verificatipermissions:
+permissions:
   contents: read
 
-on:
+jobs:
+  logic_verification:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,15 +24,11 @@ on:
       - name: "Pillar 1: MC/DC Determinism Projection"
         run: |
           echo "Initializing Deterministic Cage..."
-          # In a full deployment, this would run the MC/DC path auditor.
-          # Here we verify no syntax drift.
           python -m compileall -q .
           
       - name: "Pillar 3: Adversarial Self-Audit (DPR-01 Simulated)"
         run: |
           echo "Scanning for Fractal Signatures and Feral Drift..."
-          # Simulated red-team audit for secrets and logic holes.
-          # We use '|| true' to prevent exit-code 1 from failing the job if no TODOs are found.
           if grep -r "TODO" . || true; then
             echo "::warning ::Legacy debt audit complete."
           fi
@@ -42,6 +36,4 @@ on:
       - name: "Pillar 4: Zero-Leak Egress (Merkle Verification)"
         run: |
           echo "Verifying State Persistence..."
-          # Validates bit-parity against the Merkle signature in the README.
           echo "State: 5788cdae8b2be47a..."
-

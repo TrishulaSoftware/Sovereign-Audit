@@ -1,13 +1,13 @@
-﻿name: "GHOST SHIFT DEPLOY â€” TRISHULA EGRESS"
-
-permissions:
-  contents: read
+﻿name: "GHOST SHIFT DEPLOY - TRISHULA EGRESS"
 
 on:
   push:
     tags:
-      - 'v*.*.*' # Trigger on version tags
-  workflow_dispatch: # Manual deployment
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   package_doctrine:
@@ -18,7 +18,6 @@ jobs:
       - name: "Sanitize Egress Manifest"
         run: |
             echo "Purging Iron Box assets from Egress..."
-            # Implementation of the Doctrine Egress Purge
             rm -rf .git
             rm -f trishula-*-key.json
             
@@ -33,10 +32,9 @@ jobs:
             sha256sum trishula_sovereign_bundle.tar.gz > manifest.sha256
             
       - name: "Upload Ascended Artifact"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trishula-sovereign-egress
           path: |
             trishula_sovereign_bundle.tar.gz
             manifest.sha256
-
